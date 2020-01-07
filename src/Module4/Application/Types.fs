@@ -23,4 +23,4 @@ type Customer = {
 type PurchaseHistory = {
     CustomerId : int
     PurchasesByMonth : decimal list
-    }
+}

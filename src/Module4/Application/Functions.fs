@@ -2,6 +2,9 @@
 
 open Types
 open System
+open System.IO
+
+let [<Literal>] dataPath = __SOURCE_DIRECTORY__ + "/Data/Customer.txt"
 
 let tryPromoteToVip purchases =
     let customer, amount = purchases
@@ -9,8 +12,19 @@ let tryPromoteToVip purchases =
     else customer
 
 let getPurchases customer =
-    if customer.Id % 2 = 0 then (customer, 120M)
-    else (customer, 80M)
+    let purchases =
+        File.ReadAllLines(dataPath)
+        |> Seq.map(fun line ->
+            let cells = line.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            {
+                PurchaseHistory.CustomerId = int cells.[0]
+                PurchaseHistory.PurchasesByMonth = cells.[1..] |> Seq.map decimal |> Seq.toList
+            }
+        )
+        |> Seq.filter (fun c -> c.CustomerId = customer.Id)
+        |> Seq.collect (fun c -> c.PurchasesByMonth)
+        |> Seq.average
+    (customer, purchases)
 
 let increaseCredit condition customer =
     if condition customer then { customer with Credit = customer.Credit + 100M }
